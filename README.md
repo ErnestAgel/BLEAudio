@@ -136,7 +136,7 @@ flowchart LR
 
 ### 4.4 应用层音频 SDU 帧头字段与 GATT 控制码 UUID 列表
 
-1. **音频 SDU 帧结构（L2CAP CoC 传输：10 Bytes 固定帧头 + 20 ms 音频载荷，芯片手册级位域视图）**
+1. **音频 SDU 帧结构（L2CAP CoC 传输：10 Bytes 固定帧头 + 20 ms 音频载荷）**
    ![应用层音频 SDU 帧结构与位域定义](assets/audio_sdu_spec.png)
 
 2. **GATT 控制与状态服务 UUID 列表（仅用于小包控制、PSM 发现与状态同步）**
@@ -195,12 +195,24 @@ flowchart LR
 
 ## 7. 实测开发与测试结果（预留区）
 
-### 7.1 基准测试音频 (`sample/`)
-* [`sample/`](sample/) 目录用于存放**一段预先录制好的自然基准音频**（含人声与环境噪声）。
-* **对照测试方式**：测试“降噪开启 (NR ON)”与“无降噪 (Bypass)”效果时，均使用**外部扬声器播放 `sample/` 中的同一段音频**，由开发板双麦进行真实声学拾音采集，保证声源完全一致。
+### 7.1 基准测试音频与外放测试方法 (`sample/`)
+* [`sample/`](sample/README.md) 目录存放基于 **ITU-T P.501** 标准语料构建的 **`16 kHz / 16-bit / 单声道 PCM`（30.00 s）** 基准音频套件与通用声学分析脚本，按外放条件分为两类（详情与声学基线图谱见 [`sample/README.md`](sample/README.md)）：
+  * **双 Speaker 空间外放（[`sample/dual_speaker/`](sample/dual_speaker/)）**：以开发板为中心呈 **90° 正交**，`Speaker 1` 置于正前方 `0°` 播放纯人声、`Speaker 2` 置于左侧 `90°` 循环播放纯噪声（提前响 `>= 2 s` 让 `noise_floor_ema` 与 32 阶 NLMS 收敛），包含 **Set 1 稳态办公室** 与 **Set 2 动态地铁** 两套场景，用于验收双麦 GSC 空间波束成形与 **`>= 10 dB`** 侧向噪底抑制。
+
+    ![BleAudio 双 Speaker 声学测试空间布局示意图](sample/assets/test_spatial_setup.svg)
+
+  * **单 Speaker 分步/链路测试（[`sample/single_speaker/`](sample/single_speaker/) + 旋转摆位）**：当仅有 1 只固定 `Speaker 1` 时，保持 `0°` 正向播纯人声验收前向保真（`<= ±1.5 dB`），将开发板**原地顺时针旋转 `90°`** 仅播纯噪声验收 **`>= 10 dB`** 侧向抑制；亦可正前方播放标定混音 [`Single_Office_+5dB_16k.wav`](sample/single_speaker/Single_Office_+5dB_16k.wav) / [`Single_Metro_0dB_16k.wav`](sample/single_speaker/Single_Metro_0dB_16k.wav) 验收 100 Hz HPF、VAD 与编解码完整链路。
+
+    ![BleAudio 单 Speaker 测试方法示意图](sample/assets/test_single_speaker_setup.svg)
+
+* **对照采样原则**：对比 `NR ON` 与 `Bypass` 时须保持扬声器位置、音量与环境完全不变，通过 `BTN3` 或 GATT `0x03` 切换录制同条件 PCM。
 
 ### 7.2 音频波形与频谱对比分析
-* *(预留：后续贴入 Audacity 时域波形图与 FFT 频谱对比图)*
+* 已内置通用声学分析绘图工具 [`sample/generate_acoustic_plots.py`](sample/generate_acoustic_plots.py)，支持对开发板采集还原的任意采样率/时长 WAV 自动生成**时域波形 + STFT 语谱图 + Welch PSD + 20 ms 帧能量包络图**，并输出底噪 10% 分位抑制量 (`dNoiseP10`) 与 `< 100 Hz` 能量变化对比：
+  ```powershell
+  python sample/generate_acoustic_plots.py bypass.wav nr_on.wav --labels "Bypass" "NR ON" -o compare.png
+  ```
+* *(预留：后续实机测试完成后，贴入真实 `Bypass` vs `NR ON` 对比图与实测抑制指标)*
 
 ### 7.3 延迟实测与蓝牙抓包验证（USB 逻辑分析仪 + BLE Sniffer）
 * **设备内部处理延迟测量**：使用 **USB 逻辑分析仪** 同时接 `PDM_CLK` / `PDM_DIN` 与测试脚 `TP1/TP2`（采集完成拉高、调用 `bt_l2cap_chan_send()` 入队拉低），直接精确测出 20 ms 攒包与 DSP 处理耗时。
@@ -216,7 +228,7 @@ flowchart LR
 BleAudio/
 ├── README.md                     # 项目总览与芯片手册级设计说明书
 ├── assets/                       # 硬件框图与协议时序规范图 (Figure 1~5)
-├── sample/                       # 基准测试音频目录（外放对照源）
+├── sample/                       # 基准测试音频、空间示意图与通用声学分析脚本（见 sample/README.md）
 ├── doc/                          # 按功能域细化的 V 字模型全套权威工程文档（含同步后的 .docx 上传版与本地 .md）
 │   ├── 01_需求与验收/            # PRD 分域功能与验收基线
 │   ├── 02_系统架构/              # SDS RTOS/DMA/ISR 架构与 sys_mgr 状态机

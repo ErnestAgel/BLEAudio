@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 390" width="880" height="390" font-family="Microsoft YaHei, PingFang SC, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#059669"/>
+    </marker>
+    <marker id="arr-dim" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 1 2 L 8 5 L 1 8" fill="none" stroke="#64748b" stroke-width="1.6"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="390" fill="#ffffff"/>
+  <text x="440" y="26" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">BleAudio 单 Speaker 测试方法（固定 Speaker 1 · 正向链路 vs 旋转 90° 侧向抑制）</text>
+
+  <!-- Divider -->
+  <line x1="440" y1="45" x2="440" y2="375" stroke="#e2e8f0" stroke-width="1.2" stroke-dasharray="4,4"/>
+
+  <!-- LEFT PANEL: Posture A (0 deg) -->
+  <text x="220" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">姿态 A（0° 正向摆位）：前向保真与全链路对照</text>
+  <line x1="220" y1="120" x2="220" y2="335" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <rect x="85" y="68" width="270" height="52" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="220" y="89" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">Speaker 1（位置固定不变）</text>
+  <text x="220" y="109" text-anchor="middle" font-size="10.5" fill="#1d4ed8">播 *_Speaker1_Speech 或 Single_* 混音</text>
+
+  <path d="M 196 130 Q 220 140 244 130" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
+  <path d="M 186 141 Q 220 154 254 141" fill="none" stroke="#60a5fa" stroke-width="1.5"/>
+  <line x1="220" y1="122" x2="220" y2="232" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+
+  <rect x="62" y="156" width="316" height="52" rx="6" fill="#f8fafc" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text x="220" y="174" text-anchor="middle" font-size="10.5" font-weight="700" fill="#1e40af">0° 垂直等距入射 (Δt ≈ 0)</text>
+  <text x="220" y="190" text-anchor="middle" font-size="10" fill="#1e40af">• 播纯人声：验 NR ON 无前向误抵消 (≤ ±1.5 dB)</text>
+  <text x="220" y="203" text-anchor="middle" font-size="10" fill="#1e40af">• 播 Single_*：验 HPF / VAD / ADPCM 编码链路</text>
+
+  <line x1="394" y1="74" x2="394" y2="280" stroke="#64748b" stroke-width="1.2" marker-start="url(#arr-dim)" marker-end="url(#arr-dim)"/>
+  <text x="399" y="175" font-size="10.5" font-weight="700" fill="#475569">40~50</text>
+  <text x="403" y="189" font-size="10.5" font-weight="700" fill="#475569">cm</text>
+
+  <rect x="135" y="242" width="170" height="86" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2.2"/>
+  <line x1="178" y1="268" x2="262" y2="268" stroke="#047857" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <circle cx="178" cy="268" r="8" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <circle cx="262" cy="268" r="8" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <text x="178" y="256" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">Mic L</text>
+  <text x="262" y="256" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">Mic R</text>
+  <text x="220" y="302" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">nRF52840 开发板 (0° 正向)</text>
+
+  <text x="220" y="356" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Mic L — Mic R 平行于 Speaker 1</text>
+
+  <!-- RIGHT PANEL: Posture B (90 deg rotated) -->
+  <text x="660" y="54" text-anchor="middle" font-size="13" font-weight="700" fill="#1e293b">姿态 B（原地旋转开发板 90°）：侧向噪声抑制验收</text>
+  <line x1="660" y1="120" x2="660" y2="345" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <rect x="525" y="68" width="270" height="52" rx="10" fill="#fff7ed" stroke="#d97706" stroke-width="2"/>
+  <text x="660" y="89" text-anchor="middle" font-size="12.5" font-weight="700" fill="#0f172a">Speaker 1（位置固定不变）</text>
+  <text x="660" y="109" text-anchor="middle" font-size="10.5" fill="#b45309">仅播纯噪声 (*_Speaker2_Noise_16k.wav)</text>
+
+  <path d="M 636 130 Q 660 140 684 130" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+  <path d="M 626 141 Q 660 154 694 141" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+  <line x1="660" y1="122" x2="660" y2="218" stroke="#d97706" stroke-width="2.2" marker-end="url(#arr-orange)"/>
+
+  <rect x="505" y="154" width="310" height="50" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1.2"/>
+  <text x="660" y="172" text-anchor="middle" font-size="10.5" font-weight="700" fill="#9a3412">90° 侧向顺轴入射 (Δt &gt; 0)</text>
+  <text x="660" y="188" text-anchor="middle" font-size="10" fill="#9a3412">先达 Mic L 后达 Mic R，Y_diff 捕获噪声参考</text>
+  <text x="660" y="201" text-anchor="middle" font-size="10" fill="#9a3412">对比 Bypass vs NR ON：验证抑噪 &gt;= 10 dB</text>
+
+  <line x1="832" y1="74" x2="832" y2="280" stroke="#64748b" stroke-width="1.2" marker-start="url(#arr-dim)" marker-end="url(#arr-dim)"/>
+  <text x="837" y="175" font-size="10.5" font-weight="700" fill="#475569">40~50</text>
+  <text x="841" y="189" font-size="10.5" font-weight="700" fill="#475569">cm</text>
+
+  <!-- Vertical rotated DUT box -->
+  <rect x="612" y="226" width="96" height="114" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2.2"/>
+  <line x1="642" y1="250" x2="642" y2="318" stroke="#047857" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <circle cx="642" cy="250" r="7.5" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <circle cx="642" cy="318" r="7.5" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <text x="656" y="254" font-size="10" font-weight="700" fill="#064e3b">Mic L</text>
+  <text x="656" y="322" font-size="10" font-weight="700" fill="#064e3b">Mic R</text>
+  <text x="676" y="280" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">DUT</text>
+  <text x="676" y="294" text-anchor="middle" font-size="10.5" font-weight="700" fill="#065f46">旋转 90°</text>
+
+  <!-- Rotation arrow -->
+  <path d="M 555 262 A 28 28 0 1 1 564 312" fill="none" stroke="#059669" stroke-width="1.8" stroke-dasharray="4,3" marker-end="url(#arr-green)"/>
+  <text x="530" y="284" text-anchor="end" font-size="10.5" font-weight="700" fill="#047857">原地</text>
+  <text x="530" y="298" text-anchor="end" font-size="10.5" font-weight="700" fill="#047857">旋转 90°</text>
+
+  <text x="660" y="362" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">原地顺时针旋转 90°（Mic 轴指向 Speaker 1）</text>
+</svg>

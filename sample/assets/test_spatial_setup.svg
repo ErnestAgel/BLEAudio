@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 430" width="880" height="430" font-family="Microsoft YaHei, PingFang SC, Segoe UI, sans-serif">
+  <defs>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-orange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 1 L 9 5 L 0 9 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-dim" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+      <path d="M 1 2 L 8 5 L 1 8" fill="none" stroke="#64748b" stroke-width="1.6"/>
+    </marker>
+  </defs>
+
+  <rect width="880" height="430" fill="#ffffff"/>
+  <text x="440" y="28" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">BleAudio 双 Speaker 声学测试空间布局（俯视图 · 90° 正交）</text>
+
+  <!-- Reference orthogonal axes -->
+  <line x1="150" y1="286" x2="495" y2="286" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="330" y1="115" x2="330" y2="380" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- Speaker 1 (0 deg front) -->
+  <rect x="200" y="52" width="260" height="58" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+  <text x="330" y="75" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">Speaker 1（正前方 0° · 目标人声）</text>
+  <text x="330" y="96" text-anchor="middle" font-size="11" fill="#1d4ed8">播放：*_Speaker1_Speech_16k.wav</text>
+
+  <!-- Sound waves & arrow from Speaker 1 -->
+  <path d="M 304 124 Q 330 136 356 124" fill="none" stroke="#60a5fa" stroke-width="1.6"/>
+  <path d="M 294 136 Q 330 151 366 136" fill="none" stroke="#60a5fa" stroke-width="1.6"/>
+  <line x1="330" y1="114" x2="330" y2="232" stroke="#2563eb" stroke-width="2.4" marker-end="url(#arr-blue)"/>
+  <rect x="342" y="154" width="174" height="48" rx="6" fill="#f8fafc" stroke="#bfdbfe" stroke-width="1.2"/>
+  <text x="350" y="173" font-size="10.5" fill="#1e40af">0° 垂直等距入射 (Δt ≈ 0)</text>
+  <text x="350" y="191" font-size="10.5" fill="#1e40af">→ Y_sum 完整保留人声</text>
+
+  <!-- Distance Speaker 1 <-> DUT -->
+  <line x1="528" y1="58" x2="528" y2="268" stroke="#64748b" stroke-width="1.2" marker-start="url(#arr-dim)" marker-end="url(#arr-dim)"/>
+  <text x="534" y="160" font-size="11" font-weight="700" fill="#475569">40~50</text>
+  <text x="539" y="174" font-size="11" font-weight="700" fill="#475569">cm</text>
+
+  <!-- DUT: nRF52840 Board at center -->
+  <rect x="245" y="242" width="170" height="88" rx="10" fill="#ecfdf5" stroke="#059669" stroke-width="2.2"/>
+  <line x1="288" y1="268" x2="372" y2="268" stroke="#047857" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <circle cx="288" cy="268" r="8" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <circle cx="372" cy="268" r="8" fill="#10b981" stroke="#064e3b" stroke-width="1.5"/>
+  <text x="288" y="256" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">Mic L</text>
+  <text x="372" y="256" text-anchor="middle" font-size="10" font-weight="700" fill="#064e3b">Mic R</text>
+  <text x="330" y="286" text-anchor="middle" font-size="9.5" fill="#047857">双麦连线平行 Speaker 1</text>
+  <text x="330" y="311" text-anchor="middle" font-size="11.5" font-weight="700" fill="#065f46">nRF52840 开发板 (DUT)</text>
+
+  <!-- Speaker 2 (90 deg left) -->
+  <rect x="20" y="232" width="118" height="108" rx="10" fill="#fff7ed" stroke="#d97706" stroke-width="2"/>
+  <text x="79" y="258" text-anchor="middle" font-size="12.5" font-weight="700" fill="#9a3412">Speaker 2</text>
+  <text x="79" y="276" text-anchor="middle" font-size="11" font-weight="700" fill="#9a3412">侧向噪声 (90°)</text>
+  <text x="79" y="302" text-anchor="middle" font-size="10" fill="#b45309">循环纯噪声:</text>
+  <text x="79" y="318" text-anchor="middle" font-size="9.5" fill="#b45309">*_Speaker2_Noise</text>
+
+  <!-- Sound waves & arrow from Speaker 2 -->
+  <path d="M 150 264 Q 160 286 150 308" fill="none" stroke="#f59e0b" stroke-width="1.6"/>
+  <path d="M 162 256 Q 174 286 162 316" fill="none" stroke="#f59e0b" stroke-width="1.6"/>
+  <line x1="142" y1="286" x2="236" y2="286" stroke="#d97706" stroke-width="2.4" marker-end="url(#arr-orange)"/>
+  <rect x="144" y="340" width="194" height="46" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1.2"/>
+  <text x="241" y="358" text-anchor="middle" font-size="10" fill="#9a3412">90° 入射先达 Mic L (Δt &gt; 0)</text>
+  <text x="241" y="375" text-anchor="middle" font-size="10" fill="#9a3412">→ Y_diff 捕获参考供 NLMS 抵消</text>
+
+  <!-- Distance Speaker 2 <-> DUT -->
+  <line x1="140" y1="406" x2="326" y2="406" stroke="#64748b" stroke-width="1.2" marker-start="url(#arr-dim)" marker-end="url(#arr-dim)"/>
+  <text x="233" y="421" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">30 ~ 40 cm</text>
+
+  <!-- 90-deg orthogonal arc -->
+  <path d="M 225 286 A 105 105 0 0 1 330 181" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-dasharray="5,4"/>
+  <text x="220" y="210" text-anchor="end" font-size="12" font-weight="700" fill="#dc2626">90° 正交</text>
+
+  <!-- Right SOP panel -->
+  <rect x="572" y="52" width="290" height="358" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.4"/>
+  <text x="717" y="78" text-anchor="middle" font-size="13.5" font-weight="700" fill="#0f172a">标准外放测试步骤 (SOP)</text>
+  <line x1="590" y1="90" x2="844" y2="90" stroke="#cbd5e1" stroke-width="1"/>
+
+  <text x="588" y="114" font-size="11.5" font-weight="700" fill="#1e293b">1. 摆位校准</text>
+  <text x="594" y="132" font-size="10.2" fill="#334155">开发板置于中心，双麦连线平行 Speaker 1</text>
+  <text x="594" y="148" font-size="10.2" fill="#334155">(0°)；Speaker 2 置于左侧 (90°)，远离墙面。</text>
+
+  <text x="588" y="178" font-size="11.5" font-weight="700" fill="#1e293b">2. 先开 Speaker 2 纯噪声</text>
+  <text x="594" y="196" font-size="10.2" fill="#334155">循环播放 *_Speaker2_Noise_16k.wav</text>
+  <text x="594" y="212" font-size="10.2" fill="#334155">提前响 &gt;= 2 s，让噪底与 NLMS 先收敛。</text>
+
+  <text x="588" y="242" font-size="11.5" font-weight="700" fill="#1e293b">3. 再播 Speaker 1 纯人声</text>
+  <text x="594" y="260" font-size="10.2" fill="#334155">播放对应 *_Speaker1_Speech_16k.wav</text>
+  <text x="594" y="276" font-size="10.2" fill="#334155">（无需精确同步），调节适中声压防削波。</text>
+
+  <text x="588" y="306" font-size="11.5" font-weight="700" fill="#1e293b">4. 同摆位对照验收</text>
+  <text x="594" y="324" font-size="10.2" fill="#334155">保持位置音量不变，BTN3 / GATT 0x03</text>
+  <text x="594" y="340" font-size="10.2" fill="#334155">分别录制 Bypass 与 NR ON：</text>
+  <text x="594" y="358" font-size="10.2" fill="#0f766e" font-weight="700">• Set 1 稳态抑制目标 &gt;= 10 dB</text>
+  <text x="594" y="375" font-size="10.2" fill="#0f766e" font-weight="700">• Set 2 强噪下验证人声保真与 VAD</text>
+</svg>
