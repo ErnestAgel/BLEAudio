@@ -33,6 +33,8 @@ flowchart LR
     SOC <-->|"2.4 GHz BLE"| PHONE["PC 上位机 / BLE 调试工具<br/>(音频接收 & OTA)"]
 ```
 
+* *(预留：后续硬件组装完成后，补齐双麦与 nRF52840 DK 实物接线照片)*
+
 ### 1.3 开发与调试软件工具
 * **固件开发与编译**：VS Code + `nRF Connect for VS Code` + **nRF Connect SDK (NCS) v3.4.2**（Zephyr RTOS / `west` / MCUboot Sysbuild），**优先基于官方 SDK 示例工程裁剪移植**
 * **烧录与日志查看**：板载 Segger J-Link（`west flash`）+ 串口 / SEGGER RTT 终端
@@ -221,7 +223,7 @@ flowchart LR
 
 ---
 
-## 8. 工程目录、开发环境与设备树关键配置
+## 8. 工程目录与编译烧录说明
 
 ### 8.1 项目目录结构树
 ```text
@@ -256,54 +258,7 @@ BleAudio/
   west build -b nrf52840dk/nrf52840 --sysbuild
   west flash
   ```
-
-### 8.3 设备树关键配置片段 (`nrf52840dk_nrf52840.overlay`)
-```dts
-/ {
-	aliases {
-		dmic-dev = &pdm0;
-		ota-pwm-led = &ota_pwm_led; /* 映射 DK 板载 LED3 (P0.15) 作呼吸灯 */
-	};
-
-	pwmleds {
-		compatible = "pwm-leds";
-		ota_pwm_led: pwm_led_2 {
-			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
-		};
-	};
-};
-
-/* DK 板载 DTS 默认启用了 i2c0 (P0.26/P0.27) 与 pwm_led0 (占用 &pwm0 通道 0)，复用前必须禁用 */
-&i2c0 { status = "disabled"; };
-&pwm_led0 { status = "disabled"; };
-
-&pinctrl {
-	pdm0_default: pdm0_default {
-		group1 { psels = <NRF_PSEL(PDM_CLK, 0, 26)>, <NRF_PSEL(PDM_DIN, 0, 27)>; };
-	};
-	pwm0_default: pwm0_default {
-		group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 15)>; };
-	};
-	pwm0_sleep: pwm0_sleep {
-		group1 { psels = <NRF_PSEL(PWM_OUT0, 0, 15)>; low-power-enable; };
-	};
-};
-
-&pdm0 {
-	status = "okay";
-	pinctrl-0 = <&pdm0_default>;
-	pinctrl-names = "default";
-	clock-source = "PCLK32M_HFXO";
-};
-
-&pwm0 {
-	status = "okay";
-	pinctrl-0 = <&pwm0_default>;
-	pinctrl-1 = <&pwm0_sleep>;
-	pinctrl-names = "default", "sleep";
-};
-&qspi { status = "okay"; }; /* 挂载板载 8MB QSPI Flash 供 LittleFS 音频缓存使用 */
-```
+* **硬件引脚与设备树规范**：完整引脚分配、外设冲突避让及 `.overlay` 配置见 [01_硬件接口与设备树配置规范.docx](doc/04_硬件与设备树/01_硬件接口与设备树配置规范.docx)。
 
 ---
 
