@@ -1,0 +1,14 @@
+# Editors / IDE
+.vscode/
+*.swp
+*~
+
+# Build artifacts
+build/
+build*/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]

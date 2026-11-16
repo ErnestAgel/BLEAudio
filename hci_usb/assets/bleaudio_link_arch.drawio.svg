@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="880px" height="340px" viewBox="0 0 880 340" content="&lt;mxfile host=&quot;Electron&quot; modified=&quot;2026-11-16T14:25:00.000Z&quot; agent=&quot;Antigravity&quot; version=&quot;24.0.0&quot; type=&quot;device&quot;&gt;
+  &lt;diagram id=&quot;bleaudio-link-arch&quot; name=&quot;BleAudio Link Architecture&quot;&gt;
+    &lt;mxGraphModel dx=&quot;980&quot; dy=&quot;540&quot; grid=&quot;1&quot; gridSize=&quot;10&quot; guides=&quot;1&quot; tooltips=&quot;1&quot; connect=&quot;1&quot; arrows=&quot;1&quot; fold=&quot;1&quot; page=&quot;1&quot; pageScale=&quot;1&quot; pageWidth=&quot;880&quot; pageHeight=&quot;340&quot; math=&quot;0&quot; shadow=&quot;0&quot;&gt;
+      &lt;root&gt;
+        &lt;mxCell id=&quot;0&quot;/&gt;
+        &lt;mxCell id=&quot;1&quot; parent=&quot;0&quot;/&gt;
+        &lt;mxCell id=&quot;pc_box&quot; value=&quot;PC 端（Windows 宿主机 + WSL2）&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=4;fillColor=#ffffff;strokeColor=#334155;strokeWidth=2;verticalAlign=top;fontStyle=1;fontSize=13;fontColor=#0f172a;spacingTop=8;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;445&quot; y=&quot;34&quot; width=&quot;412&quot; height=&quot;276&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;dk_box&quot; value=&quot;&amp;lt;b&amp;gt;nRF52840 DK&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;从机：BLEAudio_DK&amp;lt;br&amp;gt;&amp;lt;font style=&amp;quot;font-size:11px;color:#475569&amp;quot;&amp;gt;双麦 PDM · 2M PHY · DLE&amp;lt;/font&amp;gt;&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=8;fillColor=#ffffff;strokeColor=#0f766e;strokeWidth=2;fontSize=13;fontColor=#0f172a;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;88&quot; width=&quot;182&quot; height=&quot;184&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;dongle_body&quot; value=&quot;&amp;lt;b&amp;gt;BT5040U&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&amp;lt;font style=&amp;quot;font-size:11px&amp;quot;&amp;gt;hci_usb 网卡&amp;lt;/font&amp;gt;&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=16;fillColor=#eff6ff;strokeColor=#2563eb;strokeWidth=2;fontSize=12;fontColor=#1e3a8a;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;340&quot; y=&quot;152&quot; width=&quot;83&quot; height=&quot;52&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;usb_plug&quot; value=&quot;USB&quot; style=&quot;rounded=0;whiteSpace=wrap;html=1;fillColor=#cbd5e1;strokeColor=#475569;strokeWidth=1.5;fontSize=10;fontColor=#334155;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;422&quot; y=&quot;164&quot; width=&quot;23&quot; height=&quot;28&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;wsl_box&quot; value=&quot;WSL2 (Ubuntu Linux)&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=6;dashed=1;fillColor=#fff7ed;strokeColor=#ea580c;strokeWidth=1.5;verticalAlign=top;fontStyle=1;fontSize=12;fontColor=#c2410c;spacingTop=6;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;478&quot; y=&quot;84&quot; width=&quot;356&quot; height=&quot;122&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;bluez_box&quot; value=&quot;&amp;lt;b&amp;gt;BlueZ (hci0)&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&amp;lt;font style=&amp;quot;font-size:11px;color:#475569&amp;quot;&amp;gt;btusb + 蓝牙协议栈&amp;lt;/font&amp;gt;&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#ffffff;strokeColor=#fb923c;strokeWidth=1.5;fontSize=12;fontColor=#0f172a;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;496&quot; y=&quot;114&quot; width=&quot;136&quot; height=&quot;72&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;app_box&quot; value=&quot;&amp;lt;b&amp;gt;上位机接收脚本&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&amp;lt;font style=&amp;quot;font-size:11px;color:#475569&amp;quot;&amp;gt;收包 / 校时 → .wav&amp;lt;/font&amp;gt;&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=12;fillColor=#ffffff;strokeColor=#16a34a;strokeWidth=1.5;fontSize=12;fontColor=#0f172a;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;674&quot; y=&quot;114&quot; width=&quot;144&quot; height=&quot;72&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;win_box&quot; value=&quot;&amp;lt;b&amp;gt;Windows · usbipd-win（USB 透传桥梁）&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&amp;lt;font style=&amp;quot;font-size:11px;color:#475569&amp;quot;&amp;gt;把插在 Windows 上的 BT5040U 直通给 WSL2&amp;lt;/font&amp;gt;&quot; style=&quot;rounded=1;whiteSpace=wrap;html=1;arcSize=10;fillColor=#eff6ff;strokeColor=#60a5fa;strokeWidth=1.5;fontSize=12;fontColor=#1e3a8a;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;478&quot; y=&quot;226&quot; width=&quot;356&quot; height=&quot;66&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;ble_edge&quot; value=&quot;BLE 5.0 无线连接&amp;lt;br&amp;gt;控制/对时 + 音频流&quot; style=&quot;endArrow=classic;startArrow=classic;html=1;dashed=1;strokeColor=#2563eb;strokeWidth=2;fontSize=11;fontColor=#1d4ed8;labelBackgroundColor=#f8fafc;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;dk_box&quot; target=&quot;dongle_body&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;usb_to_win&quot; style=&quot;endArrow=classic;html=1;strokeColor=#475569;strokeWidth=1.8;edgeStyle=orthogonalEdgeStyle;exitX=1;exitY=0.5;entryX=0;entryY=0.5;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;usb_plug&quot; target=&quot;win_box&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;win_to_bluez&quot; value=&quot;USBIP 透传&quot; style=&quot;endArrow=classic;html=1;strokeColor=#2563eb;strokeWidth=1.8;fontSize=11;fontColor=#1d4ed8;labelBackgroundColor=#ffffff;exitX=0.24;exitY=0;entryX=0.5;entryY=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;win_box&quot; target=&quot;bluez_box&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;bluez_to_app&quot; style=&quot;endArrow=classic;startArrow=classic;html=1;strokeColor=#0f766e;strokeWidth=1.8;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;bluez_box&quot; target=&quot;app_box&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;/&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;">
+  <defs>
+    <style>
+      .font { font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", Arial, sans-serif; }
+    </style>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-slate" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#475569"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#0d9488"/>
+    </marker>
+    <filter id="soft-shadow" x="-5%" y="-5%" width="110%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas background -->
+  <rect x="0" y="0" width="880" height="340" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+
+  <!-- Section captions -->
+  <text x="115" y="42" text-anchor="middle" class="font" font-size="12" font-weight="600" fill="#64748b">嵌入式采集端</text>
+  <text x="274" y="42" text-anchor="middle" class="font" font-size="12" font-weight="600" fill="#2563eb">2.4 GHz 无线空口</text>
+
+  <!-- ==================== 1. nRF52840 DK Card ==================== -->
+  <g filter="url(#soft-shadow)">
+    <rect x="24" y="88" width="182" height="184" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+    <path d="M 24 100 Q 24 88 36 88 L 194 88 Q 206 88 206 100 L 206 122 L 24 122 Z" fill="#0f766e"/>
+    <text x="115" y="110" text-anchor="middle" class="font" font-size="13.5" font-weight="700" fill="#ffffff">nRF52840 DK</text>
+  </g>
+
+  <!-- Simple PCB / Mic / Chip illustration inside DK card -->
+  <rect x="52" y="136" width="126" height="62" rx="8" fill="#f0fdfa" stroke="#99f6e4" stroke-width="1.2"/>
+  <circle cx="72" cy="156" r="7" fill="#ffffff" stroke="#0d9488" stroke-width="1.5"/>
+  <circle cx="72" cy="156" r="2.2" fill="#0d9488"/>
+  <circle cx="72" cy="178" r="7" fill="#ffffff" stroke="#0d9488" stroke-width="1.5"/>
+  <circle cx="72" cy="178" r="2.2" fill="#0d9488"/>
+  <rect x="102" y="150" width="38" height="34" rx="4" fill="#ccfbf1" stroke="#0f766e" stroke-width="1.5"/>
+  <text x="121" y="171" text-anchor="middle" class="font" font-size="10" font-weight="700" fill="#115e59">SoC</text>
+  <line x1="79" y1="156" x2="102" y2="162" stroke="#0d9488" stroke-width="1.2"/>
+  <line x1="79" y1="178" x2="102" y2="172" stroke="#0d9488" stroke-width="1.2"/>
+  <path d="M 140 167 L 152 167 L 152 154 L 159 154 L 159 178 L 166 178 L 166 154" fill="none" stroke="#0f766e" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="115" y="220" text-anchor="middle" class="font" font-size="12.5" font-weight="700" fill="#0f172a">从机：BLEAudio_DK</text>
+  <rect x="44" y="232" width="142" height="24" rx="12" fill="#f1f5f9"/>
+  <text x="115" y="248" text-anchor="middle" class="font" font-size="11" fill="#475569">双麦 PDM · 2M PHY · DLE</text>
+
+  <!-- ==================== 2. Wireless Icon & Link ==================== -->
+  <g transform="translate(274, 144)">
+    <path d="M -22 -11 A 15 15 0 0 0 -22 11" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+    <path d="M -29 -17 A 23 23 0 0 0 -29 17" fill="none" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M 22 -11 A 15 15 0 0 1 22 11" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 29 -17 A 23 23 0 0 1 29 17" fill="none" stroke="#93c5fd" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="15" fill="#dbeafe" stroke="#2563eb" stroke-width="1.8"/>
+    <path d="M -1 -8 L -1 8 M -1 -8 L 5 -3.5 L -6 4.5 M -6 -4.5 L 5 3.5 L -1 8" fill="none" stroke="#1d4ed8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <line x1="212" y1="178" x2="334" y2="178" stroke="#2563eb" stroke-width="2.2" stroke-dasharray="5 4" marker-start="url(#arrow-blue)" marker-end="url(#arrow-blue)"/>
+
+  <rect x="214" y="192" width="120" height="40" rx="8" fill="#ffffff" stroke="#bfdbfe" stroke-width="1"/>
+  <text x="274" y="209" text-anchor="middle" class="font" font-size="11.5" font-weight="700" fill="#1d4ed8">BLE 5.0 无线连接</text>
+  <text x="274" y="224" text-anchor="middle" class="font" font-size="10.5" fill="#475569">控制/对时 + 音频流</text>
+
+  <!-- ==================== 3. PC End Container ==================== -->
+  <g filter="url(#soft-shadow)">
+    <rect x="445" y="34" width="412" height="276" rx="14" fill="#ffffff" stroke="#334155" stroke-width="2"/>
+    <path d="M 445 48 Q 445 34 459 34 L 843 34 Q 857 34 857 48 L 857 68 L 445 68 Z" fill="#1e293b"/>
+    <circle cx="465" cy="51" r="4" fill="#f87171"/>
+    <circle cx="479" cy="51" r="4" fill="#fbbf24"/>
+    <circle cx="493" cy="51" r="4" fill="#34d399"/>
+    <text x="658" y="56" text-anchor="middle" class="font" font-size="13" font-weight="700" fill="#ffffff">PC 端（Windows 宿主机 + WSL2）</text>
+  </g>
+
+  <!-- ==================== 4. Plugged-in BT5040U USB Dongle ==================== -->
+  <rect x="440" y="159" width="12" height="38" rx="2" fill="#e2e8f0" stroke="#334155" stroke-width="1.5"/>
+  <rect x="422" y="164" width="23" height="28" rx="2" fill="#cbd5e1" stroke="#475569" stroke-width="1.5"/>
+  <rect x="428" y="170" width="8" height="5" rx="1" fill="#64748b"/>
+  <rect x="428" y="181" width="8" height="5" rx="1" fill="#64748b"/>
+
+  <g filter="url(#soft-shadow)">
+    <rect x="340" y="152" width="83" height="52" rx="9" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+    <circle cx="353" cy="165" r="3" fill="#22c55e"/>
+    <text x="383" y="176" text-anchor="middle" class="font" font-size="12.5" font-weight="700" fill="#1e40af">BT5040U</text>
+    <text x="381" y="193" text-anchor="middle" class="font" font-size="10.5" fill="#475569">hci_usb 网卡</text>
+  </g>
+  <text x="381" y="222" text-anchor="middle" class="font" font-size="10.5" font-weight="600" fill="#64748b">直插 PC USB 口</text>
+
+  <!-- ==================== 5. Inside PC: WSL2 (Top) + Windows (Bottom) ==================== -->
+  <rect x="478" y="84" width="356" height="122" rx="10" fill="#fff7ed" stroke="#ea580c" stroke-width="1.6" stroke-dasharray="5 3"/>
+  <rect x="490" y="75" width="142" height="20" rx="6" fill="#ea580c"/>
+  <text x="561" y="89" text-anchor="middle" class="font" font-size="11" font-weight="700" fill="#ffffff">WSL2 (Ubuntu Linux)</text>
+
+  <rect x="496" y="114" width="136" height="72" rx="9" fill="#ffffff" stroke="#fb923c" stroke-width="1.6"/>
+  <text x="564" y="143" text-anchor="middle" class="font" font-size="13" font-weight="700" fill="#0f172a">BlueZ (hci0)</text>
+  <text x="564" y="164" text-anchor="middle" class="font" font-size="11" fill="#64748b">btusb + 蓝牙协议栈</text>
+
+  <rect x="674" y="114" width="144" height="72" rx="9" fill="#ffffff" stroke="#16a34a" stroke-width="1.6"/>
+  <text x="746" y="143" text-anchor="middle" class="font" font-size="13" font-weight="700" fill="#0f172a">上位机接收脚本</text>
+  <text x="746" y="164" text-anchor="middle" class="font" font-size="11" fill="#15803d">收包 / 校时 → .wav</text>
+
+  <line x1="635" y1="150" x2="670" y2="150" stroke="#0d9488" stroke-width="2" marker-start="url(#arrow-teal)" marker-end="url(#arrow-teal)"/>
+
+  <rect x="478" y="226" width="356" height="66" rx="10" fill="#eff6ff" stroke="#60a5fa" stroke-width="1.6"/>
+  <rect x="488" y="217" width="60" height="19" rx="6" fill="#2563eb"/>
+  <text x="518" y="230" text-anchor="middle" class="font" font-size="10.5" font-weight="700" fill="#ffffff">Windows</text>
+  <text x="664" y="255" text-anchor="middle" class="font" font-size="13" font-weight="700" fill="#1e3a8a">usbipd-win（USB 透传桥梁）</text>
+  <text x="664" y="275" text-anchor="middle" class="font" font-size="11" fill="#475569">把插在 Windows 上的 BT5040U 直通给 WSL2</text>
+
+  <path d="M 452 178 L 465 178 L 465 259 L 474 259" fill="none" stroke="#475569" stroke-width="1.8" marker-end="url(#arrow-slate)"/>
+
+  <line x1="564" y1="224" x2="564" y2="190" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <rect x="572" y="198" width="62" height="17" rx="4" fill="#ffffff"/>
+  <text x="603" y="210" text-anchor="middle" class="font" font-size="10" font-weight="600" fill="#1d4ed8">USBIP 透传</text>
+</svg>
