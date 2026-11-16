@@ -12,3 +12,6 @@ build*/
 venv/
 __pycache__/
 *.py[cod]
+
+# Local-only markdown design docs
+doc/**/*.md
