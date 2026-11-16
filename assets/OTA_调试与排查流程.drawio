@@ -1,0 +1,98 @@
+<mxfile host="app.diagrams.net" modified="2026-11-17T01:05:00.000Z" agent="Antigravity" version="24.0.0">
+  <diagram id="ota-debug-flow" name="OTA调试排查与架构">
+    <mxGraphModel dx="1420" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="BLE OTA (MCUboot Direct-XIP + Revert) 调试排查路径与线程优先级模型" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=18;fontStyle=1;fontColor=#1A1A1A;" vertex="1" parent="1">
+          <mxGeometry x="260" y="20" width="880" height="35" as="geometry" />
+        </mxCell>
+
+        <!-- Left: Troubleshooting Flow -->
+        <mxCell id="grp_left" value="一、OTA 故障排查与根因定位流程" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=14;fontStyle=1;fillColor=#F8F9FA;strokeColor=#6C757D;dashed=1;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="30" y="70" width="760" height="820" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s1" value="1. 手机下发 dfu_application.zip&#xa;RTT: DFU chunk rejected: not in OTA state" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#D39E00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="120" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s1_fix" value="门控机制正常生效：&#xa;先按 BTN4 进入 SYS_STATE_OTA (LED3 呼吸)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4EDDA;strokeColor=#28A745;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="120" width="310" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s1" target="s1_fix">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s2" value="2. 改 VERSION 后增量编译升级&#xa;重启后仍显示旧版本 v0.1.0" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#D39E00;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="70" y="220" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s2_fix" value="manifest.json 未刷新版本号：&#xa;改 VERSION 后必须执行 Pristine Build&#xa;确保新版本 &gt; 旧版本 (Direct-XIP 强约束)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4EDDA;strokeColor=#28A745;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="215" width="310" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s2" target="s2_fix">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s3" value="3. 进入 OTA 并连接后突然复位&#xa;RTT: RESETREAS=0x00000002 (DOG)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8D7DA;strokeColor=#DC3545;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="325" width="300" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="s3_a" value="启用 LOG_MODE_IMMEDIATE=y&#xa;+ FLASH/IMG_MGMT DBG 日志" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2E3E5;strokeColor=#6C757D;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="440" y="325" width="310" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s3" target="s3_a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s4" value="对比实验：临时关闭 TASK_WDT&#xa;12.3s 内完成 25+ 页擦除 (89.7ms/页)&#xa;并成功切槽重启至 v0.1.3 + New image confirmed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1ECF1;strokeColor=#17A2B8;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="150" y="435" width="520" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s3_a" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s5" value="根因锁定：&#xa;MCUMGR_TRANSPORT_WORKQUEUE 默认优先级 = 3（高于 sys_mgr_task = 8）&#xa;连续 BLE OTA + NVMC 擦写抢占 CPU，饿死 sys_mgr_task 导致 task_wdt 超时" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8D7DA;strokeColor=#DC3545;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="110" y="550" width="600" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s4" target="s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s6" value="最终修复方案：&#xa;1. CONFIG_MCUMGR_TRANSPORT_WORKQUEUE_THREAD_PRIO=9（低于 sys_mgr_task=8）&#xa;2. CONFIG_MCUMGR_TRANSPORT_WORKQUEUE_STACK_SIZE=4096&#xa;3. 保持 CONFIG_WATCHDOG=y + CONFIG_TASK_WDT=y (15000 ms) 保护回滚" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4EDDA;strokeColor=#28A745;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="670" width="600" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s5" target="s6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="s7" value="验证闭环：v0.1.2 (Slot 0) --[OTA]--&gt; v0.1.3 (Slot 1, RESETREAS=0x04 SREQ) --&gt; New image confirmed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CCE5FF;strokeColor=#004085;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="70" y="800" width="680" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=1.5;" edge="1" parent="1" source="s6" target="s7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Right: Priority & DMA Boundary -->
+        <mxCell id="grp_right" value="二、线程优先级分层与硬件 DMA 边界" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=14;fontStyle=1;fillColor=#F8F9FA;strokeColor=#6C757D;dashed=1;spacingTop=8;" vertex="1" parent="1">
+          <mxGeometry x="820" y="70" width="540" height="820" as="geometry" />
+        </mxCell>
+
+        <mxCell id="p_bt" value="SDC / BT 协议栈 + k_sys_work_q (Prio &lt; 0 / 抢占高优)&#xa;RADIO EasyDMA 空中收发 SMP / L2CAP 数据包" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2E3E5;strokeColor=#495057;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="860" y="125" width="460" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="p_aud" value="音频链路线程（与 OTA 态严格互斥）&#xa;audio_cap_task (Prio 4) -&gt; audio_dsp_task (Prio 5)&#xa;-&gt; ble_tx_task (Prio 6, L2CAP CoC) / audio_store_task (Prio 7)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D1ECF1;strokeColor=#0C5460;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="860" y="215" width="460" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="p_sys" value="sys_mgr_task (Prio 8)&#xa;状态机调度 + LED/PWM0 呼吸灯 + task_wdt 喂狗 (500ms)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D4EDDA;strokeColor=#155724;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="320" width="460" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="p_mcumgr" value="MCUMGR_TRANSPORT_WORKQUEUE (Prio 9, 4KB 栈)&#xa;不抢占音频线程与 sys_mgr_task；仅在 SYS_STATE_OTA 放行" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3CD;strokeColor=#856404;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="860" y="415" width="460" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="dma_box" value="三、OTA 数据流与硬件 DMA / NVMC 边界&#xa;&#xa;[手机 App]&#xa;   |  (BLE 2.4GHz)&#xa;   v&#xa;[nRF52840 RADIO] --- 使用 EasyDMA ---&gt; [RAM net_buf]&#xa;                                           |&#xa;                                   (MCUmgr img_mgmt)&#xa;                                           |&#xa;                                           v&#xa;[flash_sync_mpsl] 申请 MPSL 射频空闲时隙 (timeslot)&#xa;   |  不使用 DMA：CPU 同步操作 NVMC 擦写片内 Flash&#xa;   |  (擦除 4KB 页约 89.7ms，期间 CPU 取指暂停)&#xa;   v&#xa;[片内 Flash 空闲槽 (Slot 1 / Bank B)]&#xa;   |&#xa;   v&#xa;[MCUboot Direct-XIP] 校验高版本+签名 -&gt; 跳转新槽&#xa;   |&#xa;   v&#xa;[新固件自检] 成功调用 boot_write_img_confirmed() 固化" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=16;fillColor=#FFFFFF;strokeColor=#004085;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="860" y="515" width="460" height="340" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

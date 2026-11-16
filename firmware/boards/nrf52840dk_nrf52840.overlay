@@ -1,0 +1,82 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Target: nrf52840dk/nrf52840 (NCS v3.4.2)
+ * Spec:   doc/04_硬件与设备树/01_硬件接口与设备树配置规范.md §2
+ */
+
+/ {
+	aliases {
+		dmic-dev = &pdm0;
+		ota-pwm-led = &ota_pwm_led;
+	};
+
+	pwmleds {
+		compatible = "pwm-leds";
+		ota_pwm_led: pwm_led_2 {
+			/* DK LED3 is active-low -> PWM_POLARITY_INVERTED */
+			pwms = <&pwm0 0 PWM_MSEC(20) PWM_POLARITY_INVERTED>;
+			label = "OTA Breathing LED3";
+		};
+	};
+
+	tp_pins {
+		compatible = "gpio-leds";
+		tp1_pin: tp1 {
+			gpios = <&gpio1 1 GPIO_ACTIVE_HIGH>;
+			label = "TP1 DMA Capture";
+		};
+		tp2_pin: tp2 {
+			gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+			label = "TP2 L2CAP Enqueue";
+		};
+	};
+};
+
+/* Phase 2/3: QSPI external flash (enable together with NORDIC_QSPI_NOR) */
+/* chosen { nordic,pm-ext-flash = &mx25r64; }; */
+
+/* arduino_i2c (i2c0) occupies P0.26/P0.27 which are PDM_CLK/PDM_DIN. */
+&i2c0 {
+	status = "disabled";
+};
+
+/* Default pwm_led0 (LED1 on pwm0 ch0) must be disabled; LED3 takes over. */
+&pwm_led0 {
+	status = "disabled";
+};
+
+&pinctrl {
+	pdm0_default: pdm0_default {
+		group1 {
+			psels = <NRF_PSEL(PDM_CLK, 0, 26)>,
+				<NRF_PSEL(PDM_DIN, 0, 27)>;
+		};
+	};
+
+	pwm0_default: pwm0_default {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 15)>;
+		};
+	};
+
+	pwm0_sleep: pwm0_sleep {
+		group1 {
+			psels = <NRF_PSEL(PWM_OUT0, 0, 15)>;
+			low-power-enable;
+		};
+	};
+};
+
+&pdm0 {
+	status = "okay";
+	pinctrl-0 = <&pdm0_default>;
+	pinctrl-names = "default";
+	clock-source = "PCLK32M_HFXO";
+};
+
+&pwm0 {
+	status = "okay";
+	pinctrl-0 = <&pwm0_default>;
+	pinctrl-1 = <&pwm0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
