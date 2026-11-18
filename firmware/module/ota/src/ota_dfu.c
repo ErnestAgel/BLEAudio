@@ -10,6 +10,7 @@
 #include "ota_dfu.h"
 #include "ota_led.h"
 #include "sys_mgr.h"
+#include "audio_storage.h"
 
 LOG_MODULE_REGISTER(ota_dfu, LOG_LEVEL_INF);
 
@@ -87,8 +88,29 @@ void ota_dfu_init(void)
 	mgmt_callback_register(&os_mgmt_cb);
 }
 
+int ota_dfu_selfcheck(void)
+{
+	/* LittleFS on QSPI must mount (NVS boot_cnt + fs_mount done by audio_store_task) */
+	int err = audio_storage_selfcheck();
+
+	if (err) {
+		LOG_ERR("Self-check: LittleFS mount check FAILED (%d)", err);
+	} else {
+		LOG_INF("Self-check: LittleFS mount OK");
+	}
+	return err;
+}
+
 int ota_dfu_confirm_image(void)
 {
+	int fs_err = ota_dfu_selfcheck();
+
+	if (fs_err) {
+		/* Never confirm an image whose storage self-check failed; even an
+		 * already-confirmed image must report failure so LED4 indicates error.
+		 */
+		return fs_err;
+	}
 	if (boot_is_img_confirmed()) {
 		return 0;
 	}

@@ -32,8 +32,22 @@
 	};
 };
 
-/* Phase 2/3: QSPI external flash (enable together with NORDIC_QSPI_NOR) */
-/* chosen { nordic,pm-ext-flash = &mx25r64; }; */
+/* Phase 2: 8 MB QSPI MX25R6435F (board default 8 MHz, read4io/pp4io) hosts LittleFS.
+ * Internal &flash0 keeps nrf52840_partition.dtsi (slot0/slot1 0x76000, storage_partition 32 KB for NVS).
+ * P0.17/19/20-23 are wired on the DK; nothing else may use them.
+ */
+&mx25r64 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		lfs_partition: partition@0 {
+			label = "littlefs_storage";
+			reg = <0x00000000 0x00800000>;
+		};
+	};
+};
 
 /* arduino_i2c (i2c0) occupies P0.26/P0.27 which are PDM_CLK/PDM_DIN. */
 &i2c0 {

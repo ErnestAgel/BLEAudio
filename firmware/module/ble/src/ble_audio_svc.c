@@ -727,9 +727,20 @@ void ble_audio_svc_abort_replay(void)
 	k_sem_give(&sent_sem);
 }
 
+void ble_audio_svc_clear_abort(void)
+{
+	atomic_set(&abort_flag, 0);
+}
+
+bool ble_audio_svc_abort_pending(void)
+{
+	return atomic_get(&abort_flag) != 0;
+}
+
 void ble_audio_svc_wait_all_sent(void)
 {
-	while (atomic_get(&in_flight) > 0 && atomic_get(&l2cap_ready)) {
+	while (atomic_get(&in_flight) > 0 && atomic_get(&l2cap_ready) &&
+	       !atomic_get(&abort_flag)) {
 		(void)k_sem_take(&sent_sem, K_MSEC(50));
 	}
 }

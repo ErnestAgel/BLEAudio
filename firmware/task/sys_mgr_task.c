@@ -15,7 +15,7 @@
 LOG_MODULE_REGISTER(sys_mgr_task, LOG_LEVEL_INF);
 
 #define WDT_NODE       DT_ALIAS(watchdog0)
-/* Full-slot NVMC erase (~10 s on 464 KB) stalls CPU; keep WDT > 10 s */
+/* Full-slot NVMC erase (~10 s on 472 KB) stalls CPU; keep WDT > 10 s */
 #define WDT_TIMEOUT_MS 15000
 #define WDT_FEED_MS    500
 
@@ -60,7 +60,8 @@ void sys_mgr_task_entry(void *p1, void *p2, void *p3)
 		}
 	}
 
-	if (ota_dfu_confirm_image() != 0) {
+	err = ota_dfu_confirm_image();
+	if (err != 0) {
 		goto selfcheck_failed;
 	}
 

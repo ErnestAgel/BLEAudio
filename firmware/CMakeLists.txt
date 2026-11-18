@@ -11,6 +11,7 @@ target_include_directories(app PRIVATE
   module/ota/include
   module/ble/include
   module/audio/include
+  module/storage/include
 )
 
 target_sources(app PRIVATE
@@ -27,4 +28,5 @@ target_sources(app PRIVATE
   module/ble/src/ble_adv.c
   module/ble/src/ble_audio_svc.c
   module/audio/src/audio_stub.c
+  module/storage/src/audio_storage.c
 )

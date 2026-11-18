@@ -38,6 +38,9 @@ int ble_audio_svc_tx_poll(k_timeout_t timeout);
 
 int ble_audio_svc_send_blocking_replay(const uint8_t *sdu, uint16_t len);
 void ble_audio_svc_abort_replay(void);
+/* Re-arm replay: called by sys_mgr_replay_begin() under the sys_mgr lock. */
+void ble_audio_svc_clear_abort(void);
+bool ble_audio_svc_abort_pending(void);
 void ble_audio_svc_wait_all_sent(void);
 
 /* Notify Status (skipped silently if CCCD not subscribed). */

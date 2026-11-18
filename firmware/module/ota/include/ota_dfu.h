@@ -10,6 +10,11 @@
 void ota_dfu_init(void);
 bool ota_dfu_is_active(void);
 
+/* Power-on storage self-check: LittleFS on QSPI mounted (0 = OK). Run by
+ * ota_dfu_confirm_image() before the image may be confirmed.
+ */
+int ota_dfu_selfcheck(void);
+
 /* "Test first, confirm later": confirm the running image only if
  * boot_is_img_confirmed() is false. Call after all self-checks passed.
  */

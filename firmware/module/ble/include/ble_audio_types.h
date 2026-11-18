@@ -23,6 +23,7 @@
 /* ICD sys_state values reported in the Status characteristic */
 #define ICD_SYS_STATE_IDLE      1U
 #define ICD_SYS_STATE_CAPTURING 2U
+#define ICD_SYS_STATE_UPLOADING 3U
 #define ICD_SYS_STATE_OTA       4U
 
 enum pkt_type {

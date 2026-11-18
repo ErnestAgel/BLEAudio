@@ -10,6 +10,7 @@
 enum sys_state {
 	SYS_STATE_IDLE = 0,
 	SYS_STATE_CAPTURING,
+	SYS_STATE_UPLOADING,  /* idle-period QSPI replay (pkt_type 0x01) in progress */
 	SYS_STATE_OTA,
 };
 
@@ -19,6 +20,8 @@ enum sys_evt_type {
 	EVT_BTN_OTA_TOGGLE,
 	EVT_GATT_CTRL_CMD,   /* opcode/param from GATT 0x1002 */
 	EVT_STATUS_CHANGED,   /* BLE link / PHY / CoC state changed */
+	EVT_QSPI_WATERMARK_95, /* audio_storage: QSPI used >= 92~95 %, force-stop capture */
+	EVT_UPLOAD_DONE,      /* ble_tx_task: replay loop finished or aborted */
 };
 
 struct sys_evt {
@@ -44,6 +47,12 @@ uint8_t sys_mgr_get_codec(void);
  * Returns 0 if an event was processed, -EAGAIN on timeout.
  */
 int sys_mgr_poll_and_dispatch(int32_t timeout_ms);
+
+/* Replay arbitration (ble_tx_task). begin: IDLE -> UPLOADING only if the CoC is up and
+ * clears a stale abort flag. end: UPLOADING -> IDLE (no-op if BTN1 already switched to
+ * CAPTURING). */
+bool sys_mgr_replay_begin(void);
+void sys_mgr_replay_end(void);
 
 /* Direct state helpers (kept for synchronous callers if needed). */
 void sys_mgr_start_capture(void);

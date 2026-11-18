@@ -11,6 +11,7 @@
 #include "ota_dfu.h"
 #include "audio_stub.h"
 #include "ble_audio_svc.h"
+#include "audio_storage.h"
 
 LOG_MODULE_REGISTER(sys_mgr, LOG_LEVEL_INF);
 
@@ -49,7 +50,7 @@ static void start_capture_locked(void)
 {
 	if (state == SYS_STATE_OTA) {
 		LOG_WRN("Start capture ignored in OTA state");
-	} else if (state == SYS_STATE_IDLE) {
+	} else if (state == SYS_STATE_IDLE || state == SYS_STATE_UPLOADING) {
 		state = SYS_STATE_CAPTURING;
 		/* BTN1 preempts any in-progress replay */
 		ble_audio_svc_abort_replay();
@@ -66,6 +67,8 @@ static void stop_capture_locked(void)
 		audio_capture_stop();
 		hw_ui_led_capture(false);
 		LOG_INF("state -> IDLE");
+		/* Capture ended: offload whatever the QSPI holds once the CoC is ready */
+		audio_storage_request_replay();
 	}
 }
 
@@ -88,7 +91,8 @@ void sys_mgr_toggle_capture(void)
 	k_mutex_lock(&lock, K_FOREVER);
 	if (state == SYS_STATE_OTA) {
 		LOG_WRN("BTN1 ignored in OTA state");
-	} else if (state == SYS_STATE_IDLE) {
+	} else if (state == SYS_STATE_IDLE || state == SYS_STATE_UPLOADING) {
+		/* BTN1 during UPLOADING preempts the replay (abort_replay in start) */
 		start_capture_locked();
 	} else {
 		stop_capture_locked();
@@ -119,6 +123,9 @@ void sys_mgr_fill_status(ble_status_pkt_t *st)
 	case SYS_STATE_CAPTURING:
 		st->sys_state = ICD_SYS_STATE_CAPTURING;
 		break;
+	case SYS_STATE_UPLOADING:
+		st->sys_state = ICD_SYS_STATE_UPLOADING;
+		break;
 	case SYS_STATE_OTA:
 		st->sys_state = ICD_SYS_STATE_OTA;
 		break;
@@ -129,6 +136,8 @@ void sys_mgr_fill_status(ble_status_pkt_t *st)
 	st->nr_on = nr_on;
 	st->codec_type = codec;
 	st->phy_mode = ble_audio_svc_get_phy_mode();
+	st->qspi_used_pct = audio_storage_get_used_pct();
+	st->pending_files = audio_storage_count_pending();
 	st->drop_cnt = sys_cpu_to_le32(ble_audio_svc_get_drop_cnt());
 }
 
@@ -141,7 +150,8 @@ static void status_tick(void)
 
 	sys_mgr_fill_status(&st);
 	changed = memcmp(&st, &last_status, offsetof(ble_status_pkt_t, drop_cnt)) != 0;
-	if (changed || (state == SYS_STATE_CAPTURING && (now - last_status_ms) >= 1000)) {
+	if (changed || ((state == SYS_STATE_CAPTURING || state == SYS_STATE_UPLOADING) &&
+			(now - last_status_ms) >= 1000)) {
 		last_status = st;
 		last_status_ms = now;
 		(void)ble_audio_svc_notify_status(&st);
@@ -174,7 +184,10 @@ static void handle_ctrl(uint8_t opcode, uint32_t param)
 		k_mutex_unlock(&lock);
 		break;
 	case CTRL_OP_TRIGGER_REPLAY:
-		LOG_WRN("Replay requested: QSPI storage arrives in Phase 3, ignored");
+		if (state == SYS_STATE_IDLE) {
+			LOG_INF("Replay requested (GATT 0x04)");
+			audio_storage_request_replay();
+		}
 		break;
 	default:
 		LOG_WRN("Unhandled ctrl opcode 0x%02x", opcode);
@@ -204,6 +217,8 @@ void sys_mgr_enter_ota(void)
 	if (state == SYS_STATE_CAPTURING) {
 		audio_capture_stop();
 		hw_ui_led_capture(false);
+	} else if (state == SYS_STATE_UPLOADING) {
+		ble_audio_svc_abort_replay();
 	}
 	state = SYS_STATE_OTA;
 	ota_led_start();
@@ -221,9 +236,40 @@ void sys_mgr_exit_ota(void)
 			ota_led_stop(false);
 			state = SYS_STATE_IDLE;
 			LOG_INF("state -> IDLE (left OTA)");
+			audio_storage_request_replay();
 		}
 	}
 	k_mutex_unlock(&lock);
+}
+
+bool sys_mgr_replay_begin(void)
+{
+	bool ok = false;
+
+	k_mutex_lock(&lock, K_FOREVER);
+	if (state == SYS_STATE_IDLE && ble_audio_svc_is_l2cap_ready()) {
+		/* Holding the lock: BTN1's abort_replay() cannot slip in before the clear */
+		ble_audio_svc_clear_abort();
+		state = SYS_STATE_UPLOADING;
+		ok = true;
+		LOG_INF("state -> UPLOADING");
+	}
+	k_mutex_unlock(&lock);
+	if (ok) {
+		(void)sys_mgr_post_event(EVT_STATUS_CHANGED);
+	}
+	return ok;
+}
+
+void sys_mgr_replay_end(void)
+{
+	k_mutex_lock(&lock, K_FOREVER);
+	if (state == SYS_STATE_UPLOADING) {
+		state = SYS_STATE_IDLE;
+		LOG_INF("state -> IDLE (replay finished)");
+	}
+	k_mutex_unlock(&lock);
+	(void)sys_mgr_post_event(EVT_UPLOAD_DONE);
 }
 
 int sys_mgr_poll_and_dispatch(int32_t timeout_ms)
@@ -254,6 +300,11 @@ int sys_mgr_poll_and_dispatch(int32_t timeout_ms)
 		handle_ctrl(evt.opcode, evt.param);
 		break;
 	case EVT_STATUS_CHANGED:
+	case EVT_UPLOAD_DONE:
+		break;
+	case EVT_QSPI_WATERMARK_95:
+		LOG_WRN("QSPI watermark reached: forcing capture stop");
+		sys_mgr_stop_capture();
 		break;
 	default:
 		LOG_WRN("Unknown event %d", evt.type);

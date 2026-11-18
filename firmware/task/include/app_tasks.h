@@ -11,8 +11,10 @@
 
 #define TASK_STACK_AUDIO_CAP   2048
 #define TASK_STACK_AUDIO_DSP   4096
-#define TASK_STACK_BLE_TX      2048
-#define TASK_STACK_AUDIO_STORE 2048
+/* ble_tx also runs the QSPI replay (fs_read/readdir/unlink): 3 KB */
+#define TASK_STACK_BLE_TX      3072
+/* LittleFS mount/format + commit paths nest deeply: 4 KB (spec table says 2 KB) */
+#define TASK_STACK_AUDIO_STORE 4096
 #define TASK_STACK_SYS_MGR     2048
 
 void sys_mgr_task_entry(void *p1, void *p2, void *p3);
