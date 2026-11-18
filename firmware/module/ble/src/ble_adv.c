@@ -8,6 +8,7 @@
 #include <zephyr/logging/log.h>
 
 #include "ble_adv.h"
+#include "ble_audio_svc.h"
 #include "hw_ui.h"
 
 LOG_MODULE_REGISTER(ble_adv, LOG_LEVEL_INF);
@@ -89,6 +90,12 @@ int ble_adv_init(void)
 		return err;
 	}
 	LOG_INF("Bluetooth initialized");
+
+	err = ble_audio_svc_init();
+	if (err) {
+		LOG_ERR("ble_audio_svc_init failed (%d)", err);
+		return err;
+	}
 
 	k_work_init(&adv_work, adv_work_handler);
 	k_work_init_delayable(&blink_work, blink_handler);

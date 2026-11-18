@@ -25,5 +25,6 @@ target_sources(app PRIVATE
   module/ota/src/ota_led.c
   module/ota/src/ota_dfu.c
   module/ble/src/ble_adv.c
+  module/ble/src/ble_audio_svc.c
   module/audio/src/audio_stub.c
 )
