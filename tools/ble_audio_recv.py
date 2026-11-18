@@ -69,6 +69,8 @@ def l2cap_coc_connect(addr: str, addr_type: int, psm: int, rcv_mtu: int,
             e = ctypes.get_errno()
             raise OSError(e, "bind: " + os.strerror(e))
         sock.setsockopt(SOL_BLUETOOTH, BT_RCVMTU, rcv_mtu)
+        # 增大内核接收缓冲以减少 BlueZ LE_CREDITS 回包频次（规避部分内核 tx_ida 耗尽）
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4194304)
         # bdaddr 在内核中为小端 (与显示字节序相反)
         raw = bytes(int(x, 16) for x in addr.split(":"))[::-1]
         remote = SockaddrL2(AF_BLUETOOTH, socket.htobe16(psm) if False else psm,
@@ -126,6 +128,7 @@ class Receiver:
         self.wav.setframerate(SAMPLE_RATE)
         self.fill_gaps = fill_gaps
         self.expected = None
+        self.last_pkt_type = None
         self.rx = self.lost = self.dup = self.bad = 0
         self.bytes = 0
         self.eof = False
@@ -146,9 +149,16 @@ class Receiver:
             self.bad += 1
             print(f"[WARN] 非法帧 seq={seq} codec={codec} len={len(body)}")
             return
-        self.rx += 1
-        self.bytes += len(sdu)
         self.last_utc = (utc, bool(flags & FLAG_UTC))
+        if self.last_pkt_type is not None and pkt_type != self.last_pkt_type:
+            print(f"[STREAM] pkt_type {self.last_pkt_type} -> {pkt_type} (重置 seq 期望)")
+            self.expected = None
+        elif self.expected is not None and seq == 0 and 0 < self.expected < 0xFFF0:
+            # 非 65535 回绕的 seq=0 视为新会话/重传起点（如无 EOF 中断后重新采集或续传）
+            print(f"[SYNC] seq 从 0 重新开始 (prev expected={self.expected})")
+            self.expected = None
+        self.last_pkt_type = pkt_type
+
         if self.expected is not None:
             gap = (seq - self.expected) & 0xFFFF
             if gap == 0:
@@ -162,10 +172,13 @@ class Receiver:
                 self.dup += 1
                 print(f"[DUP ] seq={seq} expected={self.expected}")
                 return
+        self.rx += 1
+        self.bytes += len(sdu)
         self.expected = (seq + 1) & 0xFFFF
         self.wav.writeframes(pcm)
         if flags & FLAG_EOF:
             self.eof = True
+            self.expected = None  # 下一个补传文件 seq 从 0 重新开始
             print(f"[EOF ] seq={seq} pkt_type={pkt_type}")
 
     def rx_loop(self, sock: socket.socket):
