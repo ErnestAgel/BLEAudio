@@ -1,0 +1,10 @@
+numpy
+matplotlib
+scipy
+soundfile
+librosa
+torch
+torchaudio
+onnxruntime
+speechmos
+silero-vad

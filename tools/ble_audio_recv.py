@@ -9,10 +9,11 @@
   * 控制: 0x01 开始 / 0x02 停止 / 0x03 NR / 0x06 Codec
   * 校验 seq_num (uint16 回绕) 连续性并统计丢帧
   * Raw PCM / 帧独立 IMA-ADPCM 还原为 16 kHz 单声道 16-bit .wav
+  * 默认按帧头 FLAG_NR (bit0) 自动同步拆分输出 *_bypass.wav 与 *_nr.wav (--no-split-nr 可关闭)
 
 依赖:  pip install bleak
 前提:  WSL2 内核需带蓝牙支持并通过 usbipd 透传适配器, bluetoothd 已运行。
-用法:  python3 ble_audio_recv.py --codec adpcm --duration 30 -o out.wav
+用法:  python3 tools/ble_audio_recv.py --codec adpcm --duration 30 -o out.wav
        交互命令 (运行中输入): start | stop | nr 0/1 | codec 0/1 | quit
 """
 import argparse
@@ -101,32 +102,49 @@ _IDX_ADJ = [-1, -1, -1, -1, 2, 4, 6, 8]
 
 
 def adpcm_decode_frame(payload: bytes) -> bytes:
-    """164B -> 320 个 int16 (640B)。低半字节在前。"""
+    """164B -> 320 个 int16 (640B)。首点明文 + 319 个 nibble (低半字节在前)。"""
     pred, idx, _ = struct.unpack_from("<hBB", payload, 0)
     idx = min(max(idx, 0), 88)
-    out = []
-    for b in payload[4:4 + SAMPLES_PER_FRAME // 2]:
-        for nib in (b & 0x0F, b >> 4):
-            step = _STEP[idx]
-            diff = step >> 3
-            if nib & 1: diff += step >> 2
-            if nib & 2: diff += step >> 1
-            if nib & 4: diff += step
-            pred += -diff if nib & 8 else diff
-            pred = max(-32768, min(32767, pred))
-            idx = min(max(idx + _IDX_ADJ[nib & 7], 0), 88)
-            out.append(pred)
+    out = [pred]
+    for k in range(SAMPLES_PER_FRAME - 1):
+        b = payload[4 + (k >> 1)]
+        nib = (b & 0x0F) if (k & 1) == 0 else (b >> 4)
+        step = _STEP[idx]
+        diff = step >> 3
+        if nib & 1: diff += step >> 2
+        if nib & 2: diff += step >> 1
+        if nib & 4: diff += step
+        pred += -diff if nib & 8 else diff
+        pred = max(-32768, min(32767, pred))
+        idx = min(max(idx + _IDX_ADJ[nib & 7], 0), 88)
+        out.append(pred)
     return struct.pack("<%dh" % len(out), *out)
+
+
+def _open_mono_wav(path: str) -> wave.Wave_write:
+    w = wave.open(path, "wb")
+    w.setnchannels(1)
+    w.setsampwidth(2)
+    w.setframerate(SAMPLE_RATE)
+    return w
 
 
 # ---- 接收 / 统计 ----
 class Receiver:
-    def __init__(self, wav_path: str, fill_gaps: bool):
-        self.wav = wave.open(wav_path, "wb")
-        self.wav.setnchannels(1)
-        self.wav.setsampwidth(2)
-        self.wav.setframerate(SAMPLE_RATE)
+    def __init__(self, wav_path: str, fill_gaps: bool, split_nr: bool = True):
+        self.wav_path = wav_path
+        self.wav = _open_mono_wav(wav_path)
         self.fill_gaps = fill_gaps
+        self.split_nr = split_nr
+        stem, ext = os.path.splitext(wav_path)
+        if not ext:
+            ext = ".wav"
+        self.bypass_path = f"{stem}_bypass{ext}"
+        self.nr_path = f"{stem}_nr{ext}"
+        self.wav_bypass = None
+        self.wav_nr = None
+        self.rx_bypass = self.rx_nr = 0
+        self.last_nr = None
         self.expected = None
         self.last_pkt_type = None
         self.rx = self.lost = self.dup = self.bad = 0
@@ -134,6 +152,22 @@ class Receiver:
         self.eof = False
         self.last_utc = None
         self.stop_evt = threading.Event()
+
+    def _write_split(self, nr_on: bool, pcm: bytes, frames: int = 1):
+        if not self.split_nr:
+            return
+        if nr_on:
+            if self.wav_nr is None:
+                self.wav_nr = _open_mono_wav(self.nr_path)
+                print(f"[SPLIT] 检测到 NR ON，同步写入: {self.nr_path}")
+            self.wav_nr.writeframes(pcm)
+            self.rx_nr += frames
+        else:
+            if self.wav_bypass is None:
+                self.wav_bypass = _open_mono_wav(self.bypass_path)
+                print(f"[SPLIT] 检测到 Bypass，同步写入: {self.bypass_path}")
+            self.wav_bypass.writeframes(pcm)
+            self.rx_bypass += frames
 
     def on_sdu(self, sdu: bytes):
         if len(sdu) < HDR_SIZE:
@@ -159,6 +193,12 @@ class Receiver:
             self.expected = None
         self.last_pkt_type = pkt_type
 
+        nr_on = bool(flags & FLAG_NR)
+        if self.last_nr is not None and nr_on != self.last_nr:
+            print(f"[MODE] 降噪切换: {'NR ON' if self.last_nr else 'Bypass'} -> "
+                  f"{'NR ON' if nr_on else 'Bypass'} (seq={seq})")
+        self.last_nr = nr_on
+
         if self.expected is not None:
             gap = (seq - self.expected) & 0xFFFF
             if gap == 0:
@@ -167,7 +207,9 @@ class Receiver:
                 self.lost += gap
                 print(f"[LOSS] seq {self.expected}..{(seq - 1) & 0xFFFF} 丢 {gap} 帧")
                 if self.fill_gaps:
-                    self.wav.writeframes(b"\x00" * (PCM_BYTES * gap))
+                    silence = b"\x00" * (PCM_BYTES * gap)
+                    self.wav.writeframes(silence)
+                    self._write_split(nr_on, silence, frames=gap)
             else:  # 重复/乱序, 丢弃
                 self.dup += 1
                 print(f"[DUP ] seq={seq} expected={self.expected}")
@@ -176,6 +218,7 @@ class Receiver:
         self.bytes += len(sdu)
         self.expected = (seq + 1) & 0xFFFF
         self.wav.writeframes(pcm)
+        self._write_split(nr_on, pcm, frames=1)
         if flags & FLAG_EOF:
             self.eof = True
             self.expected = None  # 下一个补传文件 seq 从 0 重新开始
@@ -203,9 +246,24 @@ class Receiver:
         print(f"\n=== 统计 === 收到 {self.rx} 帧 ({self.bytes} B), 丢帧 {self.lost} "
               f"({pct:.2f}%), 重复/乱序 {self.dup}, 非法 {self.bad}, "
               f"音频 {self.rx * 0.02:.2f} s")
+        if self.split_nr and self.rx_bypass > 0 and self.rx_nr > 0:
+            print(f"分轨保存: Bypass {self.rx_bypass} 帧 ({self.rx_bypass * 0.02:.2f} s) -> {self.bypass_path}")
+            print(f"          NR ON  {self.rx_nr} 帧 ({self.rx_nr * 0.02:.2f} s) -> {self.nr_path}")
 
     def close(self):
         self.wav.close()
+        if self.wav_bypass is not None:
+            self.wav_bypass.close()
+        if self.wav_nr is not None:
+            self.wav_nr.close()
+        # 仅出现单一模式时清理多余分轨副本，保留原输出文件即可
+        if self.split_nr and not (self.rx_bypass > 0 and self.rx_nr > 0):
+            for p in (self.bypass_path, self.nr_path):
+                if os.path.exists(p):
+                    try:
+                        os.remove(p)
+                    except OSError:
+                        pass
 
 
 def parse_status(data: bytes) -> str:
@@ -232,6 +290,7 @@ async def main():
     ap.add_argument("--duration", type=float, default=0, help="自动开始采集并持续 N 秒后停止 (0=交互模式)")
     ap.add_argument("--no-utc", action="store_true", help="不下发 0x05 校时")
     ap.add_argument("--fill-gaps", action="store_true", help="丢帧处写入静音以保持时间轴")
+    ap.add_argument("--no-split-nr", action="store_true", help="禁用按 FLAG_NR 自动拆分 Bypass / NR ON 两个 WAV")
     ap.add_argument("--scan-timeout", type=float, default=15.0)
     args = ap.parse_args()
 
@@ -244,7 +303,7 @@ async def main():
     addr_type = BDADDR_LE_RANDOM if props.get("AddressType") == "random" else BDADDR_LE_PUBLIC
     print(f"[SCAN] 找到 {dev.name} {dev.address} ({'random' if addr_type == 2 else 'public'})")
 
-    rcv = Receiver(args.output, args.fill_gaps)
+    rcv = Receiver(args.output, args.fill_gaps, split_nr=not args.no_split_nr)
     loop = asyncio.get_running_loop()
     sock = None
     try:
