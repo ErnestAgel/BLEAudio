@@ -22,6 +22,7 @@ enum sys_evt_type {
 	EVT_STATUS_CHANGED,   /* BLE link / PHY / CoC state changed */
 	EVT_QSPI_WATERMARK_95, /* audio_storage: QSPI used >= 92~95 %, force-stop capture */
 	EVT_UPLOAD_DONE,      /* ble_tx_task: replay loop finished or aborted */
+	EVT_AUDIO_ERR,        /* audio_capture: DMIC read timeout / hardware fault */
 };
 
 struct sys_evt {

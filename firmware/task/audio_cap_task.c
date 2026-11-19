@@ -3,12 +3,12 @@
 #include <zephyr/logging/log.h>
 
 #include "app_tasks.h"
-#include "audio_stub.h"
-#include "audio_storage.h"
-#include "ble_audio_svc.h"
+#include "audio_capture.h"
 #include "sys_mgr.h"
 
 LOG_MODULE_REGISTER(audio_cap_task, LOG_LEVEL_INF);
+
+K_MSGQ_DEFINE(dsp_out_q, sizeof(void *), AUDIO_DSP_QUEUE_DEPTH, sizeof(void *));
 
 void audio_cap_task_entry(void *p1, void *p2, void *p3)
 {
@@ -16,88 +16,72 @@ void audio_cap_task_entry(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	static uint8_t sdu[AUDIO_MAX_SDU_BYTES];
-	int64_t next_ms;
-	uint32_t sent_cnt = 0;
-	uint32_t stored_cnt = 0;
+	if (audio_capture_init(&dsp_out_q) != 0) {
+		LOG_ERR("audio_capture_init failed: DMIC not ready");
+		return;
+	}
 
-	LOG_INF("audio_cap_task started (Phase 2: live CoC / QSPI offline store)");
+	LOG_INF("audio_cap_task started (Phase 3: PDM0 16 kHz stereo DMA -> dsp_out_q)");
 
 	for (;;) {
-		bool storing = false;      /* an audio_storage session is open */
-		bool wm_reported = false;  /* EVT_QSPI_WATERMARK_95 posted for this run */
-
 		if (audio_capture_wait_start(K_FOREVER) != 0) {
 			continue;
 		}
 
-		next_ms = k_uptime_get();
-		sent_cnt = 0;
-		stored_cnt = 0;
+		int err = audio_capture_stream_start();
 
-		/* Absolute 20 ms cadence: no drift from processing time */
+		if (err != 0) {
+			LOG_ERR("PDM0 stream start failed (%d)", err);
+			audio_capture_stop();
+			(void)sys_mgr_post_event(EVT_AUDIO_ERR);
+			continue;
+		}
+
+		uint32_t discard_cnt = AUDIO_STARTUP_DISCARD_FRAMES;
+		uint32_t cap_frames = 0;
+
 		while (audio_capture_is_running()) {
-			bool synced;
-			uint32_t utc = ble_audio_svc_get_utc(&synced);
-			uint8_t flags = 0;
+			void *blk = NULL;
+			size_t sz = 0;
 
-			if (sys_mgr_nr_enabled()) {
-				flags |= SDU_FLAG_NR_ON;
-			}
-			if (synced) {
-				flags |= SDU_FLAG_UTC_VALID;
-			}
-
-			uint16_t len = audio_stub_build_frame(sdu, flags, utc);
-
-			if (ble_audio_svc_is_l2cap_ready()) {
-				/* Link is up: live stream; seal any file written while offline */
-				if (storing) {
-					(void)audio_storage_close();
-					storing = false;
+			err = audio_capture_read_block(&blk, &sz, AUDIO_DMIC_READ_TIMEOUT_MS);
+			if (err != 0) {
+				if (audio_capture_is_running()) {
+					LOG_ERR("dmic_read error/timeout (%d)", err);
+					audio_capture_stop();
+					(void)sys_mgr_post_event(EVT_AUDIO_ERR);
 				}
-				if (ble_audio_svc_enqueue_live(sdu, len) == 0) {
-					sent_cnt++;
-					if ((sent_cnt % 50U) == 1U) {
-						LOG_INF("live frames queued=%u drops=%u", sent_cnt,
-							ble_audio_svc_get_drop_cnt());
-					}
-				}
+				break;
+			}
+
+			/* Discard first 40 ms (2 frames) startup transient */
+			if (discard_cnt > 0U) {
+				discard_cnt--;
+				audio_capture_release_block(blk);
+				continue;
+			}
+
+			if (sz != AUDIO_RX_BLOCK_BYTES) {
+				LOG_WRN("Unexpected DMIC block size %zu (expected %u)", sz,
+					AUDIO_RX_BLOCK_BYTES);
+				audio_capture_release_block(blk);
+				continue;
+			}
+
+			if (audio_capture_post_block(blk, K_NO_WAIT) != 0) {
+				audio_capture_release_block(blk);
+				LOG_WRN("dsp_out_q full, dropped 20 ms block");
 			} else {
-				/* Link down: route the frame into QSPI via the 24 KB ring_buf */
-				int err = 0;
-
-				if (!storing) {
-					err = audio_storage_open(utc, synced);
-					storing = (err == 0);
-					if (err == -EBUSY) {
-						audio_storage_count_drop();
-					}
-				}
-				if (storing) {
-					err = audio_storage_write_sdu(sdu, len);
-					if (err == 0) {
-						stored_cnt++;
-						if ((stored_cnt % 50U) == 1U) {
-							LOG_INF("offline frames stored=%u ring_drops=%u",
-								stored_cnt,
-								audio_storage_get_ring_drop_cnt());
-						}
-					}
-				}
-				if (err == -ENOSPC && !wm_reported) {
-					wm_reported = true;
-					(void)sys_mgr_post_event(EVT_QSPI_WATERMARK_95);
-				}
+				cap_frames++;
 			}
-
-			next_ms += AUDIO_FRAME_PERIOD_MS;
-			k_sleep(K_TIMEOUT_ABS_MS(next_ms));
 		}
 
-		/* Capture stopped (BTN1/GATT/OTA/watermark): flush tail, fs_sync + fs_close */
-		if (storing) {
-			(void)audio_storage_close();
-		}
+		audio_capture_stream_stop();
+
+		/* Push end-of-session sentinel so audio_dsp_task closes QSPI & resets DSP */
+		void *eos = NULL;
+
+		(void)k_msgq_put(&dsp_out_q, &eos, K_FOREVER);
+		LOG_INF("Capture session stopped (%u stereo blocks forwarded)", cap_frames);
 	}
 }

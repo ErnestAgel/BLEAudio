@@ -10,6 +10,7 @@
 #include "ota_dfu.h"
 #include "ota_led.h"
 #include "sys_mgr.h"
+#include "audio_capture.h"
 #include "audio_storage.h"
 
 LOG_MODULE_REGISTER(ota_dfu, LOG_LEVEL_INF);
@@ -95,10 +96,17 @@ int ota_dfu_selfcheck(void)
 
 	if (err) {
 		LOG_ERR("Self-check: LittleFS mount check FAILED (%d)", err);
-	} else {
-		LOG_INF("Self-check: LittleFS mount OK");
+		return err;
 	}
-	return err;
+	LOG_INF("Self-check: LittleFS mount OK");
+
+	/* PDM0 DMIC device must be ready before confirming a new image */
+	err = audio_capture_selfcheck();
+	if (err) {
+		LOG_ERR("Self-check: DMIC ready check FAILED (%d)", err);
+		return err;
+	}
+	return 0;
 }
 
 int ota_dfu_confirm_image(void)

@@ -448,9 +448,7 @@ static ssize_t write_ctrl(struct bt_conn *conn, const struct bt_gatt_attr *attr,
 		if (d[1] > 1) {
 			return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
 		}
-		if (op == CTRL_OP_SET_CODEC &&
-		    (st != SYS_STATE_IDLE || d[1] != CODEC_RAW_PCM)) {
-			/* Phase 1B streams Raw PCM only (ADPCM arrives with Phase 3) */
+		if (op == CTRL_OP_SET_CODEC && st != SYS_STATE_IDLE) {
 			return BT_GATT_ERR(BT_ATT_ERR_VALUE_NOT_ALLOWED);
 		}
 		sys_mgr_post_ctrl(op, d[1]);

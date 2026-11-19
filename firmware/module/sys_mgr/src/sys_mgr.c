@@ -9,7 +9,8 @@
 #include "hw_ui.h"
 #include "ota_led.h"
 #include "ota_dfu.h"
-#include "audio_stub.h"
+#include "audio_capture.h"
+#include "audio_dsp.h"
 #include "ble_audio_svc.h"
 #include "audio_storage.h"
 
@@ -171,6 +172,7 @@ static void handle_ctrl(uint8_t opcode, uint32_t param)
 		k_mutex_lock(&lock, K_FOREVER);
 		if (state != SYS_STATE_OTA) {
 			nr_on = param != 0;
+			audio_dsp_set_nr_enable(nr_on);
 			hw_ui_led_nr(nr_on);
 			LOG_INF("noise reduction %s (GATT)", nr_on ? "ON" : "Bypass");
 		}
@@ -201,6 +203,7 @@ void sys_mgr_toggle_nr(void)
 		LOG_WRN("BTN3 ignored in OTA state");
 	} else {
 		nr_on = !nr_on;
+		audio_dsp_set_nr_enable(nr_on);
 		hw_ui_led_nr(nr_on);
 		LOG_INF("noise reduction %s", nr_on ? "ON" : "Bypass");
 	}
@@ -305,6 +308,11 @@ int sys_mgr_poll_and_dispatch(int32_t timeout_ms)
 	case EVT_QSPI_WATERMARK_95:
 		LOG_WRN("QSPI watermark reached: forcing capture stop");
 		sys_mgr_stop_capture();
+		break;
+	case EVT_AUDIO_ERR:
+		LOG_ERR("Audio capture fault: forcing capture stop");
+		sys_mgr_stop_capture();
+		hw_ui_led_error(true);
 		break;
 	default:
 		LOG_WRN("Unknown event %d", evt.type);

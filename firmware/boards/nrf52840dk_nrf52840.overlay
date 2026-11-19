@@ -49,8 +49,12 @@
 	};
 };
 
-/* arduino_i2c (i2c0) occupies P0.26/P0.27 which are PDM_CLK/PDM_DIN. */
+/* arduino_i2c (i2c0) disabled; arduino_spi (&spi3) occupies P1.13~P1.15 -> disable to free P1.14/P1.15 for PDM0. */
 &i2c0 {
+	status = "disabled";
+};
+
+&spi3 {
 	status = "disabled";
 };
 
@@ -62,8 +66,8 @@
 &pinctrl {
 	pdm0_default: pdm0_default {
 		group1 {
-			psels = <NRF_PSEL(PDM_CLK, 0, 26)>,
-				<NRF_PSEL(PDM_DIN, 0, 27)>;
+			psels = <NRF_PSEL(PDM_CLK, 1, 15)>,
+				<NRF_PSEL(PDM_DIN, 1, 14)>;
 		};
 	};
 

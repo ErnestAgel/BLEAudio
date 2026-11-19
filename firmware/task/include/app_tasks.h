@@ -2,6 +2,8 @@
 #ifndef APP_TASKS_H_
 #define APP_TASKS_H_
 
+#include <zephyr/kernel.h>
+
 /* Thread priorities and stack sizes (aligned with BLE-AUDIO-SDS-002 §2.3) */
 #define TASK_PRIO_AUDIO_CAP   4
 #define TASK_PRIO_AUDIO_DSP   5
@@ -16,6 +18,10 @@
 /* LittleFS mount/format + commit paths nest deeply: 4 KB (spec table says 2 KB) */
 #define TASK_STACK_AUDIO_STORE 4096
 #define TASK_STACK_SYS_MGR     2048
+
+/* Shared DMA block queue from audio_cap_task -> audio_dsp_task (NULL = end of session) */
+#define AUDIO_DSP_QUEUE_DEPTH  4U
+extern struct k_msgq dsp_out_q;
 
 void sys_mgr_task_entry(void *p1, void *p2, void *p3);
 void ble_tx_task_entry(void *p1, void *p2, void *p3);

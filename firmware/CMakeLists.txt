@@ -27,6 +27,11 @@ target_sources(app PRIVATE
   module/ota/src/ota_dfu.c
   module/ble/src/ble_adv.c
   module/ble/src/ble_audio_svc.c
-  module/audio/src/audio_stub.c
+  module/audio/src/audio_capture.c
+  module/audio/src/audio_dsp.c
+  module/audio/src/audio_codec.c
   module/storage/src/audio_storage.c
 )
+
+# Optimize FPU-heavy DSP (FFT + NLMS) for speed instead of -Os
+set_source_files_properties(module/audio/src/audio_dsp.c PROPERTIES COMPILE_OPTIONS "-O2")
