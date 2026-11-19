@@ -171,7 +171,7 @@ bluetoothctl show
 等后面用接收脚本把音频存成 `.wav` 之后，回到**仓库根目录**就能用自带脚本画波形和频谱对比图（需要当前 Python 环境装有 `numpy` 和 `matplotlib`）：
 
 ```powershell
-python sample/generate_acoustic_plots.py bypass.wav nr_on.wav --labels "Bypass" "NR ON" -o compare.png
+python tools/generate_acoustic_plots.py bypass.wav nr_on.wav --labels "Bypass" "NR ON" -o compare.png
 ```
 
 ---
